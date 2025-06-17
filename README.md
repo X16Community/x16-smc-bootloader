@@ -33,7 +33,7 @@ and mouse. It also handles the phsysical push buttons and the LEDs of the system
 
 The bootloader is a separate program that is stored at the end of the flash memory (byte address 0x1e00-0x1fff).
 
-All addresses mentioned in thise document are byte addresses, unless otherwise specified.
+All addresses mentioned in this document are byte addresses, unless otherwise specified.
 
 
 # How the Bootloader Works
