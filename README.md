@@ -4,7 +4,7 @@
 - [How the Bootloader Works](#how-the-bootloader-works)
     - [Introduction](#introduction)
     - [Bootloader Entry Points](#bootloader-entry-points)
-    - [Transmitting the new Firmware](#transmitting-the-new-firmware)
+    - [Transmitting the New Firmware](#transmitting-the-new-firmware)
     - [Verifying the new Firmware](#verifying-the-new-firmware)
     - [Fail-Safe](#fail-safe)
 - [SMC Memory Map](#smc-memory-map)
@@ -28,10 +28,12 @@ This is a custom bootloader for the Commander X16 ATtiny861 based System Managem
 
 The bootloader makes it possible to update the SMC firmware from the Commander X16 without using an external programmer.
 
-The firmware is stored at the beginning of the flash memory and provides an interface to the PS/2 keyboard
-and mouse. It also handles the psysical push buttons and the LEDs of the system.
+The firmware is stored at the beginning of the flash memory (byte address 0x0000-0x1dff) and provides an interface to the PS/2 keyboard
+and mouse. It also handles the phsysical push buttons and the LEDs of the system.
 
-The bootloader is a separate program that is stored at the end of the flash memory.
+The bootloader is a separate program that is stored at the end of the flash memory (byte address 0x1e00-0x1fff).
+
+All addresses mentioned in thise document are byte addresses, unless otherwise specified.
 
 
 # How the Bootloader Works
@@ -48,11 +50,18 @@ The bootloader has two entry points: the main entry point at address 0x1e00, and
 
 ### Main Entry Point (0x1e00)
 
-The SMC is always running even if the computer is turned off. As soon as you connect the system to mains power, the SMC executes its reset
-procedure. That ends by calling the reset vector at address 0x0000. When the bootloader is installed, the reset vector always jumps to
-the bootloader main entry point at address 0x1e00.
+As soon as you connect the system to mains power, the SMC executes its reset procedure. That ends by calling the reset vector at address 0x0000. 
 
-The main entry checks if the reset button is being pressed. 
+Before bootloader v3 the reset vector pointed directly to firmware code.
+
+From bootloader v3 the reset vector jumps to the bootloader main entry point at address 0x1e00. If, however, an older version of the bootloader
+was installed, and the bootloader was upgraded to v3 using an in-system upgrade tool, the reset vector at address 0x0000 is not set to
+the main entry point until you also update the firmware. In that case the reset vector continues to point to firmware code, and the [fail-safe](#fail-safe) introduced in
+bootloader v3 is not enabled.
+
+The main entry point does the following when called.
+
+First it checks if the reset button is being pressed.
 
 If the button is pressed, the computer is turned on, and the SMC update procedure is started. This method of starting the bootloader, holding down the reset button while
 connecting the system to power, works in most situations even if the firmware has been bricked. Read more about that
@@ -63,13 +72,18 @@ If the reset button is not pressed, execution continues with the firmware's own 
 at address 0x0012 when updating the firmware using the bootloader. The EE_RDY vector is not used by standard Arduino libraries, and is
 used for the same purpose by Optiboot. The solution prevents using the EEPROM Ready interrupt in firmware code.
 
+Downgrading the bootloader from v3 requires special care if done with an in-system tool. You must ensure that the fail-safe is uninstalled by
+pointing the reset vector directly to firmware code. This can be done by first updating the bootloader and then the firmware without resetting the
+SMC in between. Downgrading the bootloader using in-system tools is a riskful operation that should be avoided unless you have access to an
+external programmer that can be used to unbrick the SMC.
+
 ### Start Update Entry Point (0x1e02)
 
 The start update entry point is to be called while the computer is running. The update
 procedure is started immediately after calling this entry point.
 
-A program running on the X16 cannot directly call the start update entry point. It must be done through
-a firmware command offset. Currently the firmware's command offset 0x8f does this.
+A program running on the X16 cannot directly call the start update entry point. To make the SMC jump to this entry point, 
+the X16 program have to send I2C command 0x8f (start bootloader).
 
 ## Transmitting the New Firmware
 
