@@ -91,10 +91,10 @@ During the update procedure, the new firmware is sent to the bootloader over I2C
 for checking the integrity of the received data, and for writing it to the flash memory.
 
 The transmission is divided into packets. Each packet consists of eight firmware bytes and one checksum byte. The
-checksum is the two's complement of the sum of the previous bytes in the packet. I2C command offset 0x80 is used
+checksum is the two's complement of the sum of the previous bytes in the packet. I2C command 0x80 is used
 to transmit each byte of a packet.
 
-After all nine bytes of a packet have been transmitted, the packet is committed with I2C command offset 0x81.
+After all nine bytes of a packet have been transmitted, the packet is committed with I2C command 0x81.
 
 Note that the SMC can only update the flash memory in whole pages of 64 bytes. The received
 bytes are buffered until there is a full page that can be written to flash memory.
@@ -108,7 +108,7 @@ When writing the first 64 bytes to flash memory, the bootloader takes these spec
 The update procedure continues by transmitting and committing packets until the whole firmware has been
 received by the bootloader.
 
-Finally, the update program must use I2C command offset 0x82 (reboot). This will
+Finally, the update program must use I2C command 0x82 (reboot). This will
 write any remaining buffered data to flash memory. The SMC is then reset, which turns off the computer.
 
 ### Example
@@ -145,8 +145,8 @@ Cmd | R/W | Data | Comment
 ## Verifying the New Firmware
 
 It is possible to verify the new firmware before the reboot command. The update program
-can rewind the target address to 0x0000 with I2C command offset 0x84, and read one byte
-at a time from the flash memory using I2C command offset 0x85.
+can rewind the target address to 0x0000 with I2C command 0x84, and read one byte
+at a time from the flash memory using I2C command 0x85.
 
 The SMC flash memory can only be updated one page at a time. A page is 64 bytes.
 In order to successfully verify the the update, the update program must ensure
