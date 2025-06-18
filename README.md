@@ -11,7 +11,7 @@
 - [Building the Project](#building-the-project)
 - [Installing the Bootloader](#installing-the-bootloader)
     - [Overview](#overview)
-    - [In-System Update of the Bootloader](#in-system-update-of-the-bootloader)
+    - [Updating the Bootloader from the Commander X16](#updating-the-bootloader-from-the-commander-x16)
     - [Programming the SMC with an External Programmer](#programming-the-smc-with-an-external-programmer)
     
 - [I2C API](#i2c-api)
@@ -55,9 +55,9 @@ As soon as you connect the system to mains power, the SMC executes its reset pro
 Before bootloader v3 the reset vector pointed directly to firmware code.
 
 From bootloader v3 the reset vector jumps to the bootloader main entry point at address 0x1e00. If, however, an older version of the bootloader
-was installed, and the bootloader was upgraded to v3 using an in-system upgrade tool, the reset vector at address 0x0000 is not set to
-the main entry point until you also update the firmware. In that case the reset vector continues to point to firmware code, and the [fail-safe](#fail-safe) introduced in
-bootloader v3 is not enabled.
+was installed, and the bootloader was upgraded to v3, the reset vector at address 0x0000 is not set to
+the main entry point unless you also update the firmware. If you only update the bootloader, the reset vector continues to point to 
+firmware code and the [fail-safe](#fail-safe) introduced in bootloader v3 is not enabled.
 
 The main entry point does the following when called.
 
@@ -72,10 +72,10 @@ If the reset button is not pressed, execution continues with the firmware's own 
 at address 0x0012 when updating the firmware using the bootloader. The EE_RDY vector is not used by standard Arduino libraries, and is
 used for the same purpose by Optiboot. The solution prevents using the EEPROM Ready interrupt in firmware code.
 
-Downgrading the bootloader from v3 requires special care if done with an in-system tool. You must ensure that the fail-safe is uninstalled by
-pointing the reset vector directly to firmware code. This can be done by first updating the bootloader and then the firmware without resetting the
-SMC in between. Downgrading the bootloader using in-system tools is a riskful operation that should be avoided unless you have access to an
-external programmer that can be used to unbrick the SMC.
+Downgrading the bootloader from v3 to an earlier version requires special care if done through software running on the Commander X16. 
+You must ensure that the fail-safe is uninstalled by pointing the reset vector directly to firmware code. This can be done by first 
+updating the bootloader and then the firmware without resetting the SMC in between. Downgrading the bootloader this way is
+a riskful operation that should be avoided unless you have access to an external programmer that can be used to unbrick the SMC.
 
 ### Start Update Entry Point (0x1e02)
 
@@ -168,7 +168,7 @@ procedure can be started by holding down reset when connecting the system
 to power.
 
 - The update procedure is interrupted after the whole firmware has been erased but
-before writing any parts of the new firmware to flash memory: When
+before writing any part of the new firmware to flash memory: When
 erasing the flash memory, all words are set to byte value 0xffff, 
 which is interpreted as No Operation (NOP) by the SMC hardware. Execution
 starts from the reset vector at 0x0000 and continues until
@@ -221,10 +221,10 @@ You need to install the bootloader yourself if:
 - the SMC is replaced by a new chip, or
 - the SMC has been corrupted and needs to be reinstalled.
 
-## In-System Update of the Bootloader
+## Updating the Bootloader from the Commander X16
 
-If you already have a functioning system, it is possible to do an
-in-system update of the bootloader without an external programmer.
+If you already have a functioning system, it is possible to update
+the bootloader from Commander X16 without an external programmer.
 
 Instructions on how to do that are found [here](https://github.com/X16Community/x16-smc/blob/main/doc/smc-bootloader-tools.md).
 
