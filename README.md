@@ -29,7 +29,7 @@
 The bootloader for the Commander X16 System Management Controller (SMC) enables users to update
 the SMC firmware straight from the computer without an external programmer.
 
-The SMC handles power control keyboard and mouse input, and LED states.
+The SMC handles power control, keyboard and mouse input, and LED states.
 
 The bootloader is a separate program stored at the end of the flash memory.
 
@@ -91,7 +91,7 @@ enabling update mode.
 
 ### Send Data Packets
 
-The new firmware is transmitted from to the bootloader in data packets.
+The new firmware is transmitted to the bootloader in data packets.
 Each packet holds eight bytes of firmware data and one checksum byte.
 
 The checksum is the two's complement of the sum of the previous bytes
@@ -127,7 +127,8 @@ Bootloader v3 writes each whole page to flash, including the first page.
 Before writing the first page, bootloader v3 erases all of the old firmware, 
 starting from the end. When updating the first page, the bootloader
 moves the firmware's reset vector (address 0x0000) to the EE_RDY vector (0x0012).
-The reset vector is changed to point to the bootloader's main entry point.
+The reset vector is changed to point to the bootloader's main entry point. This
+is part of the bootloader's fail-safe mechanism.
 
 
 ### Reboot
@@ -399,7 +400,7 @@ The reboot command ensures that any buffered firmware data is written
 to the flash memory.
 
 From bootloader v2, the command resets the SMC and the computer can
-be restarted by pressing the power button withoug power cycling the
+be restarted by pressing the power button without power cycling the
 system as was required in v1.
 
 Available since v1.
