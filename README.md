@@ -79,13 +79,13 @@ More on that later on in this document.
 What happens internally when enabling update mode differs between the
 bootloader versions.
 
-Bootloader v1 and v2 writes its own vectors to the first 64 byte page
+Bootloader v1 and v2 writes its own vectors to the first 64-byte page
 of the SMC flash memory. This is used to link interrupt service handlers
 for hardware I2C and, in case of v2, reset. The firmware is in 
 a non-working state until the update has finished.
 
 Bootloader v3 doesn't use interrupt vectors, and doesn't need to change
-the first 64 byte page. No changes are made to the firmware just by 
+the first 64-byte page. No changes are made to the firmware just by 
 enabling update mode.
 
 
@@ -109,16 +109,16 @@ After all nine bytes of a packet have been transmitted to the bootloader,
 the packet must be committed. This is done with I2C command 0x81 (commit).
 
 The bootloader sends a response code telling if the command
-was succesful or not. If the command failed, it is possible to resend the
+was successful or not. If the command failed, it is possible to resend the
 the packet and commit it again.
 
 The internal flash address pointer is automatically incremented on each successful commit.
 
-The SMC hardware can only write to the flash memory in whole 64 byte pages. The
+The SMC hardware can only write to the flash memory in whole 64-byte pages. The
 received data is buffered in RAM until there is a full page that can
 be written to flash.
 
-Bootloader v1 and v2 keeps the new firmware for the first 64 byte page in
+Bootloader v1 and v2 keeps the new firmware for the first 64-byte page in
 RAM instead of writing it to flash. As mentioned above, the first page 
 holds vectors that are used by these bootloader versions. 
 The first page is written to flash at the end of the update procedure.
@@ -137,27 +137,27 @@ After all of the new firmware has been transmitted and committed, send
 I2C command 0x82 (reboot) to finish the update.
 
 The reboot command writes any buffered data to the current
-64 byte page.
+64-byte page.
 
 What happens next differs between the bootloader versions.
 
-- Bootloader v1 writes the first 64 byte page to flash and enters
+- Bootloader v1 writes the first 64-byte page to flash and enters
 an infinite loop. You need to power cycle the system to start
 the computer after the update.
 
 - Bootloader v2 resets the SMC using the watchdog timer. After the
 reset, execution starts with the reset vector at address 0x0000. When
 enabling update mode, this was set to jump to a function in the
-bootloader that writes the first 64 byte page to flash. The bootloader
+bootloader that writes the first 64-byte page to flash. The bootloader
 then jumps to the firmware's real reset vector, which effectively
 turns off the computer.
 
 - The "bad" bootloader v2 hangs before the watchdog reset, which
-results in not updating the first 64 byte page. You can get past
+results in the first 64-byte page not being updated. You can get past
 the problem by grounding the physical reset pin of the SMC.
 
 - Bootloader v3 resets the SMC using the watchdog timer. The
-first 64 byte page was already written to flash when first received.
+first 64-byte page was already written to flash when first received.
 
 
 ### Example
@@ -207,38 +207,34 @@ enabled if you use a release including bootloader v3.
 the bootloader to v3 and after that you must also update the firmware. The
 fail-safe mechanism is not enabled if you only update the bootloader.
 
-The fail-safe means that the update procedure can
-be started even if the firmware is bricked, for instance due to an
-aborted or failed update.
+The fail-safe relies on the reset vector (address 0x0000) jumping to
+the bootloader main entry point (address 0x1e00). 
 
-It works as follows:
+The main entry point checks if the reset button is being pressed. If
+so it enables the firmware update mode. If the button is not pressed
+it jumps to the firmware's original reset vector that is moved
+to the EE_RDY vector (address 0x0012) during the update.
+
+The main entry point is accessible in most cases even if the firmware
+has been corrupted:
 
 - If the update procedure is interrupted during the firmware erase stage: Firmware
 erase starts from the last page. If interrupted during this stage,
 the reset vector at address 0x0000 is still unchanged and will be pointing
 to the bootloader's main entry point at address 0x1e00.
 
-- If the update procedure is interrupted after the whole firmware has been erased but
+- If the update procedure is interrupted after the entire firmware has been erased but
 before writing any part of the new firmware to flash memory: When
 erasing the flash memory, all words are set to byte value 0xffff, 
 which is interpreted as No Operation (NOP) by the SMC hardware. Execution
 starts from the reset vector at 0x0000 and continues until
-the first non-NOP instruction at address 0x1e00, the bootloader's main entryp point.
+the first non-NOP instruction at address 0x1e00, the bootloader's main entry point.
 This makes it possible to start the update procedure in this situation as well.
 
 - If the update procedure is interrupted after writing parts of the new
 firmware to flash memory: The first page written to flash memory
 holds the reset vector that jumps to the bootloader's main entry point making
 it possible to start the update procedure.
-
-The bootloader's main entry point runs every time the SMC is powered on if the
-fail-safe is enabled. It checks if the reset button is being pressed. If the button
-is pressed, firmware update mode is enabled.
-
-If the button is not pressed, the bootloader jumps to the firmware's original
-reset vector that was moved to the EE_RDY vector (address 0x0012) on updating the
-first 64 byte page.
-
 
 ## Verifying the New Firmware
 
@@ -248,9 +244,9 @@ the reboot command.
 The update program must first rewind the target address to 0x0000 using I2C command 0x84, 
 and may then read one byte at a time from the flash memory using I2C command 0x85.
 
-The SMC flash memory can only be updated one 64 byte page at a time.
+The SMC flash memory can only be updated one 64-byte page at a time.
 In order to successfully verify the update, the update program must ensure
-that the last page was filled and committed before starting the verify operation. 
+that the last page was filled and committed before starting the verification operation. 
 If necessary, the update program must send blank data to fill the last page. 
 
 
@@ -315,14 +311,14 @@ Instructions on how to do that are found [here](https://github.com/X16Community/
 ## Programming the SMC with an External Programmer
 
 It is always possible to install the bootloader using an External Programmer. Usually
-you install a packet that contains both the SMC firmware and the bootloader. Such packets are
+you install a packet that contains both the SMC firmware and the bootloader. Such packages are
 available from the [X16-SMC release page](https://github.com/X16Community/x16-smc/releases).
 
 ### Fuse Settings
 
 The bootloader and the SMC firmware depend on several ATtiny fuse settings as set out below.
 
-The recommended low fuse value is 0xF1. This will run the SMC at 16 MHz.
+The recommended low fuse value is 0xF1. This configures the SMC to run at 16 MHz.
 
 The recommended high fuse value is 0xD4. This enables Brown-out Detection at 4.3V, which is necessary to prevent flash memory corruption when self-programming is enabled. Serial Programming should be enabled (bit 5) and external reset disable should not be selected (bit 7). These settings are necessary for programming the SMC with an external programmer.
 
@@ -373,10 +369,10 @@ Available since v1.
 
 After a data packet of 9 bytes has been transmitted it must be committed with this command. 
 
-The first commit will target flash memory address 0x0000. The target address is moved forward 8 bytes on each successful commit.
-In bootloader v1 and v2, the first 64 byte page is held in RAM until the end of the update when it's written to flash.
+The first commit will target flash memory address 0x0000. The target address is advanced by 8 bytes on each successful commit.
+In bootloader v1 and v2, the first 64-byte page is held in RAM until the end of the update when it's written to flash.
 
-Note that the target address can be rewinded to 0x0000 by command 0x84.
+Note that the target address can be rewound to 0x0000 by command 0x84.
 
 The command returns 1 byte. The possible return values are:
 
