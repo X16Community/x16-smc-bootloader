@@ -29,7 +29,7 @@
 The bootloader for the Commander X16 System Management Controller (SMC) enables users to update
 the SMC firmware straight from the computer without an external programmer.
 
-The SMC handles power control, keyboard and mouse input, and LED states.
+The SMC firmware handles power control, keyboard and mouse input, and LED states.
 
 The bootloader is a separate program stored at the end of the flash memory.
 
@@ -63,9 +63,9 @@ Updating the SMC firmware involves the following steps:
 
 There are two ways to enable the bootloader's firmware update mode.
 
-1. Send I2C command 0x8F while the Commander X16 is running. That
+1. Send I2C command 0x8f while the Commander X16 is running. That
 command is part of the SMC firmware (not the bootloader). It will call
-the start bootloader entry point at address 0x1e02 if you momentarily press
+the start update entry point at address 0x1e02 if you momentarily press
 both the power and reset buttons at the same time within approximately
 20 seconds. This method of enabling the update mode is supported 
 in all versions of the bootloader.
@@ -79,7 +79,7 @@ More on that later on in this document.
 What happens internally when enabling update mode differs between the
 bootloader versions.
 
-Bootloader v1 and v2 writes its own vectors to the first 64-byte page
+Bootloader v1 and v2 write their own vectors to the first 64-byte page
 of the SMC flash memory. This is used to link interrupt service handlers
 for hardware I2C and, in case of v2, reset. The firmware is in 
 a non-working state until the update has finished.
@@ -108,13 +108,13 @@ until it can be written to flash.
 After all nine bytes of a packet have been transmitted to the bootloader,
 the packet must be committed. This is done with I2C command 0x81 (commit).
 
-The bootloader sends a response code telling if the command
+The bootloader sends a response code indicating whether the command
 was successful or not. If the command failed, it is possible to resend the
 the packet and commit it again.
 
 The internal flash address pointer is automatically incremented on each successful commit.
 
-The SMC hardware can only write to the flash memory in whole 64-byte pages. The
+The SMC hardware can only write to the flash memory in full 64-byte pages. The
 received data is buffered in RAM until there is a full page that can
 be written to flash.
 
@@ -123,12 +123,12 @@ RAM instead of writing it to flash. As mentioned above, the first page
 holds vectors that are used by these bootloader versions. 
 The first page is written to flash at the end of the update procedure.
 
-Bootloader v3 writes each whole page to flash, including the first page. 
-Before writing the first page, bootloader v3 erases all of the old firmware, 
-starting from the end. When updating the first page, the bootloader
-moves the firmware's reset vector (address 0x0000) to the EE_RDY vector (0x0012).
-The reset vector is changed to point to the bootloader's main entry point. This
-is part of the bootloader's fail-safe mechanism.
+Bootloader v3 writes each full 64-byte page to flash in the order it's received, 
+including the first page. Before writing the first page, bootloader v3 
+erases all of the old firmware, starting from the end. When updating the 
+first page, the bootloader moves the firmware's reset vector (address 0x0000) 
+to the EE_RDY vector (0x0012). The reset vector is changed to point to the 
+bootloader's main entry point. This is part of the bootloader's fail-safe mechanism.
 
 
 ### Reboot
@@ -204,7 +204,7 @@ to bootloader v3. This can be done as follows:
 enabled if you use a release including bootloader v3.
 
 - When updating the SMC from the Commander X16, you must first update
-the bootloader to v3 and after that you must also update the firmware. The
+the bootloader to v3 and then you must also update the firmware. The
 fail-safe mechanism is not enabled if you only update the bootloader.
 
 The fail-safe relies on the reset vector (address 0x0000) jumping to
@@ -213,7 +213,7 @@ the bootloader main entry point (address 0x1e00).
 The main entry point checks if the reset button is being pressed. If
 so it enables the firmware update mode. If the button is not pressed
 it jumps to the firmware's original reset vector that is moved
-to the EE_RDY vector (address 0x0012) during the update.
+to the EE_RDY vector (address 0x0012) during an update with bootloader v3.
 
 The main entry point is accessible in most cases even if the firmware
 has been corrupted:
@@ -245,8 +245,8 @@ The update program must first rewind the target address to 0x0000 using I2C comm
 and may then read one byte at a time from the flash memory using I2C command 0x85.
 
 The SMC flash memory can only be updated one 64-byte page at a time.
-In order to successfully verify the update, the update program must ensure
-that the last page was filled and committed before starting the verification operation. 
+In order to successfully verify the update, the update program must first ensure
+that the last page was filled and committed. 
 If necessary, the update program must send blank data to fill the last page. 
 
 
