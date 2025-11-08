@@ -90,9 +90,9 @@ No changes are made to the firmware just by enabling update mode.
 
 ### Send Data Packets
 
-The new firmware is transmitted to the bootloader in data packets.
-Each packet holds eight bytes of firmware data and one checksum byte,
-a total of nine bytes.
+The new firmware is transmitted to the bootloader over the I2C bus. The
+transmission is divided into data packets. Each packet holds eight bytes 
+of firmware data and one checksum byte, a total of nine bytes.
 
 The checksum is the two's complement of the sum of the previous bytes
 within the packet.
