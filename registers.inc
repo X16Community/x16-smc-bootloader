@@ -28,8 +28,9 @@
 .def packet_tailL                  = r2       ; Pointer to current RAM buffer tail
 .def packet_tailH                  = r3
 .def chip_erased                   = r4
+.def eeprom_flag                   = r5
 
-; r5-r13 free
+; r6-r13 free
 
 .def zeroL                         = r14
 .def zeroH                         = r15

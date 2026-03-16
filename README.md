@@ -106,7 +106,7 @@ After all nine bytes of a packet have been transmitted to the bootloader,
 the packet must be committed. This is done with I2C command 0x81 (commit).
 
 The bootloader sends a response code indicating whether the command
-was successful or not. If the command failed, it is possible to resend the
+was successful or not. If the command failed, it is possible to resend
 the packet and commit it again.
 
 The internal flash address pointer is automatically incremented on each successful commit.
@@ -432,3 +432,9 @@ content of the flash memory after an update.
 
 Available since v3.
 
+## Command 0x86 = EEPROM erase request
+
+Requests that the EEPROM is erased at the end of the update if
+if bit 0 of the value is 1.
+
+Available since v4.

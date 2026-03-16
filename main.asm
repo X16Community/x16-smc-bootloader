@@ -58,7 +58,7 @@ main:
     ldi r16, 0
     out WDTCSR, r16
 
-    ; Configure Reset button pin (PB4) as input pullup
+    ; Configure Reset button pin as input pullup
     cbi DDRB, RESET_BTN
     sbi PORTB, RESET_BTN
     

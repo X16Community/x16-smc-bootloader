@@ -181,9 +181,13 @@ i2c_receive3:
     CMD_REWIND_TARGET_ADDR
 
 i2c_receive4:
+    cpi i2c_command, 0x86
+    brne i2c_receive5
+    mov eeprom_flag, r16
+
+i2c_receive5:
     clr i2c_command
     rjmp i2c_send_ack
-
 
 ;******************************************************************************
 ; Function...: i2c_transmit
