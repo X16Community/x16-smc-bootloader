@@ -58,7 +58,7 @@ main:
     ldi r16, 0
     out WDTCSR, r16
 
-    ; Configure Reset button pin (PB4) as input pullup
+    ; Configure Reset button pin as input pullup
     cbi DDRB, RESET_BTN
     sbi PORTB, RESET_BTN
     
@@ -129,6 +129,7 @@ update_firmware:
     movw target_addrH:target_addrL, zeroH:zeroL
     clr packet_count
     clr chip_erased
+    clr eeprom_flag
 
     ; Start I2C
     rjmp i2c_main

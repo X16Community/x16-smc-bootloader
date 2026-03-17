@@ -139,6 +139,38 @@ cmd_commit_exit:
 .endm
 
 ;******************************************************************************
+; Function...: CMD_EEPROM_ERASE
+; Description: Erases the entire EEPROM, 512 bytes
+; In.........: Nothing
+; Out........: Nothing
+.macro CMD_EEPROM_ERASE
+    ; Select erase command
+    ldi r16, (0<<EEPM1) | (1<<EEPM0)
+    out EECR, r16
+    
+    ; Setup start address to end of EEPROM (0x01ff)
+    ldi target_addrL, 0xff
+    ldi target_addrH, 0x01
+
+eeprom_erase2:
+    ; Wait for EEPROM ready
+    sbic EECR, EEPE
+    rjmp eeprom_erase2
+
+    ; Load EEPROM target address
+    out EEARL, target_addrL
+    out EEARH, target_addrH
+
+    ; Run erase command
+    sbi EECR, EEMPE
+    sbi EECR, EEPE
+
+    ; Decrement address, continue if not underflowing
+    sbiw target_addrL, 1
+    brcc eeprom_erase2
+.endm
+
+;******************************************************************************
 ; Function...: CMD_REBOOT
 ; Description: Writes remainging data in the buffer to flash and resets the SMC
 ; In.........: Nothing
@@ -150,13 +182,19 @@ cmd_commit_exit:
     rcall flash_write
 
 cmd_reboot2:
+    ; Erase EEPROM if requested
+    lsr eeprom_flag
+    brcc cmd_reboot3
+    CMD_EEPROM_ERASE
+
+cmd_reboot3:
     ; Set watchdog reset after 1 second
     ldi r16,(1<<WDE) | (0<<WDIE) | (0<<WDP3) | (1<<WDP2) | (1<<WDP1) | (0<<WDP0)
-    out WDTCR,r16
+    out WDTCR, r16
 
-cmd_reboot_3:
+cmd_reboot4:
     ; Wait here until reset
-    rjmp cmd_reboot_3
+    rjmp cmd_reboot4
 .endm
 
 ;******************************************************************************
@@ -190,3 +228,4 @@ cmd_reboot_3:
 .macro CMD_READ_FLASH
     lpm r17, Z+
 .endm
+
