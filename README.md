@@ -434,7 +434,7 @@ Available since v3.
 
 ## Command 0x86 = EEPROM erase request
 
-Requests that the EEPROM is erased at the end of the update if
+Requests that the EEPROM is erased at the end of the update
 if bit 0 of the value is 1.
 
 Available since v4.

@@ -171,16 +171,19 @@ i2c_receive:
     CMD_REBOOT                          ; Guaranteed not to return
 
 i2c_receive2:
+    ; Command 0x80 - Transmit data
     cpi i2c_command, 0x80
     brne i2c_receive3
     CMD_RECEIVE_PACKET
 
 i2c_receive3:
+    ; Command 0x84 - Rewind target address
     cpi i2c_command, 0x84
     brne i2c_receive4
     CMD_REWIND_TARGET_ADDR
 
 i2c_receive4:
+    ; Command 0x86 - EEPROM erase request
     cpi i2c_command, 0x86
     brne i2c_receive5
     mov eeprom_flag, r16
