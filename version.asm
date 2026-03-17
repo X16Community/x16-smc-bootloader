@@ -24,4 +24,4 @@
 
 .cseg
 .org 0xfff
-.db $8a, 03
+.db $8a, 04
